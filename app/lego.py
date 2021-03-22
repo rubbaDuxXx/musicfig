@@ -13,6 +13,7 @@ import random
 import usb.core
 import usb.util
 import app.mp3player as mp3player
+import queue
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +157,7 @@ class Base():
     def stopMp3(self):
         global mp3state
         try:
-            #self.p.stop()
+            self.p.stop()
             mp3state = 'STOPPED'
         except Exception:
             pass
@@ -211,6 +212,13 @@ class Base():
         else:
             self.base.switch_pad(0,self.OFF)
         while True:
+            if spotify.activated() and switch_lights:
+                if not spotify.isplaying():
+                    self.base.switch_pad(0,self.OFF)
+                else:
+                    pad = random.randint(0,2)
+                    self.colour = random.randint(0,len(self.COLOURS)-1)
+                    self.base.switch_pad(pad,eval(self.COLOURS[self.colour]))
             tag = self.base.update_nfc()
             if tag:
                 status = tag.split(':')[0]
@@ -258,9 +266,6 @@ class Base():
                             logger.info('Running command %s' % command)
                             os.system(command)
                         if ('spotify' in tags['identifier'][identifier]) and spotify.activated():
-                            if current_tag == previous_tag:
-                                self.startLightshow(spotify.resume())
-                                continue
                             try:
                                 position_ms = int(tags['identifier'][identifier]['position_ms'])
                             except Exception:
@@ -268,11 +273,6 @@ class Base():
                             self.stopMp3()
                             duration_ms = spotify.spotcast(tags['identifier'][identifier]['spotify'],
                                                            position_ms)
-                            if duration_ms > 0:
-                                self.startLightshow(duration_ms)
-                            else:
-                                self.base.flash_pad(pad = pad, on_length = 10, off_length = 10,
-                                                    pulse_count = 6, colour = self.RED)
                         if ('spotify' in tags['identifier'][identifier]) and not spotify.activated():
                             current_tag = previous_tag
                     else:

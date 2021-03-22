@@ -107,6 +107,26 @@ def resume():
             pass
     return sp_remaining
 
+def isplaying():
+    if conf[0] == '':
+            return
+    try:
+        user
+    except NameError:
+        return
+    if user_token(user) is None:
+            return ''
+    with tkspotify.token_as(users[user]):
+        try:
+            song = tkspotify.playback_currently_playing()
+        except Exception as e:
+            logger.error('Spotify could not find any track playing: %s' % e)
+            return False
+        if (song is None) or (not song.is_playing):
+            return False
+        else:
+            return song
+
 def spotcast(spotify_uri,position_ms=0):
     """Play a track, playlist or album on Spotify.
     """
