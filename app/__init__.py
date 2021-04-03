@@ -29,6 +29,9 @@ app = Flask(__name__,
 
 app.config.from_object('config')
 
+try: app.config['LOG_LEVEL']
+except KeyError: app.config['LOG_LEVEL'] = "INFO"
+
 logging.config.dictConfig({
     'version': 1,
     'formatters': {'default': {
