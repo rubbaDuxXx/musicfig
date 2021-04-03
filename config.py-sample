@@ -18,6 +18,7 @@ SERVER_NAME = "localhost:5000"
 REDIRECT_URI = "http://%s/callback" % SERVER_NAME
 
 # Statement for enabling the development environment
+LOG_LEVEL = "INFO"
 DEBUG = True
 
 # Application threads. 

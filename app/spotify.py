@@ -15,6 +15,7 @@ import threading
 import subprocess
 import requests
 import unidecode
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -108,23 +109,40 @@ def resume():
     return sp_remaining
 
 def isplaying():
+    global spot_check
+    global last_song
     if conf[0] == '':
-            return
+        return
     try:
         user
     except NameError:
         return
+    try: spot_check
+    except NameError: spot_check = None
+    try: last_song
+    except NameError: last_song = None
+    if spot_check is None:
+        spot_check = time.perf_counter()
+    now = time.perf_counter()
+    elapsed = now - spot_check
     if user_token(user) is None:
-            return ''
+        return ''
     with tkspotify.token_as(users[user]):
+        # Only check once a second to avoid API rate limits.
+        if elapsed < 1:
+            return last_song
+        else:
+            spot_check = time.perf_counter()
         try:
             song = tkspotify.playback_currently_playing()
         except Exception as e:
             logger.error('Spotify could not find any track playing: %s' % e)
             return False
         if (song is None) or (not song.is_playing):
+            last_song = False
             return False
         else:
+            last_song = song
             return song
 
 def spotcast(spotify_uri,position_ms=0):
@@ -227,12 +245,8 @@ def nowplaying():
     global last_played
     global last_out
     with tkspotify.token_as(users[user]):
-        try:
-            song = tkspotify.playback_currently_playing()
-        except Exception as e:
-            logger.error('Spotify could not find any track playing: %s' % e)
-            return render_template('nowplaying.html')
-        if (song is None) or (not song.is_playing):
+        song = isplaying()
+        if (song is None) or (song == "sleep") or (not song):
             return render_template('nowplaying.html')
         # The cache_lock avoids the "recursive use of cursors not allowed" exception.
         try:

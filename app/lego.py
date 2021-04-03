@@ -112,7 +112,7 @@ class Base():
         self.base = self.startLego()
 
     def randomLightshow(self,duration = 60):
-        logger.info("Lightshow started for %s seconds." % duration)
+        logger.debug("Lightshow started for %s seconds." % duration)
         self.lightshowThread = threading.currentThread()
         t = time.perf_counter()
         while getattr(self.lightshowThread, "do_run", True) and (time.perf_counter() - t) < duration:
@@ -123,6 +123,11 @@ class Base():
         self.base.switch_pad(0,self.OFF)
 
     def startLightshow(self,duration_ms):
+        try:
+            if self.lightshowThread.is_alive():
+                return
+        except Exception:
+            pass
         if switch_lights:
             self.lightshowThread = threading.Thread(target=self.randomLightshow,
                 args=([(duration_ms / 1000)]))
@@ -212,20 +217,17 @@ class Base():
         else:
             self.base.switch_pad(0,self.OFF)
         while True:
-            if spotify.activated() and switch_lights:
-                if not spotify.isplaying():
-                    self.base.switch_pad(0,self.OFF)
-                else:
-                    pad = random.randint(0,2)
-                    self.colour = random.randint(0,len(self.COLOURS)-1)
-                    self.base.switch_pad(pad,eval(self.COLOURS[self.colour]))
+            if spotify.isplaying():
+                self.startLightshow(10)
             tag = self.base.update_nfc()
             if tag:
                 status = tag.split(':')[0]
                 pad = int(tag.split(':')[1])
                 identifier = tag.split(':')[2]
+                logger.debug("Tag event detected. Status: %s Pad: %s Id: %s" % (status, pad, identifier))
                 if status == 'removed':
                     if identifier == current_tag:
+                        self.base.switch_pad(0,self.OFF)
                         try:
                             self.lightshowThread.do_run = False
                             self.lightshowThread.join()
