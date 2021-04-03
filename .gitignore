@@ -4,3 +4,7 @@ config.py
 musicfig.log
 tags.yml
 *.pyc
+.idea/
+.DS_Store
+env/
+app/test.py
