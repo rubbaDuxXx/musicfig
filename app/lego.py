@@ -77,7 +77,7 @@ class Dimensions():
 
     def update_nfc(self):
         try:
-            inwards_packet = self.dev.read(0x81, 32, timeout = 10)
+            inwards_packet = self.dev.read(0x81, 32)
             bytelist = list(inwards_packet)
             if not bytelist:
                 return
