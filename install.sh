@@ -87,9 +87,11 @@ install_startup() {
     # Install startup service
     PYTHON_PATH=$(which python3)
     MUSICFIG_DIR=$(pwd)
+    USERNAME=$(users)
     cp musicfig.service musicfig.service-temp
     sed -i "s!%MUSICFIG_DIR%!${MUSICFIG_DIR}!ig" musicfig.service-temp
     sed -i "s!%PYTHON_PATH%!${PYTHON_PATH}!ig" musicfig.service-temp
+    sed -i "s!%USERNAME%!${USERNAME}!ig" musicfig.service-temp
     sudo cp musicfig.service-temp /etc/systemd/system/musicfig.service
     rm -f musicfig.service-temp
     sudo chown root:root /etc/systemd/system/musicfig.service
